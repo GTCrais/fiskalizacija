@@ -20,7 +20,7 @@ class Fiskalizacija
     private $security;
     private $url = "https://cis.porezna-uprava.hr:8449/FiskalizacijaService";
 
-    public function __construct($path, $pass, $security = 'SSL', $demo = false)
+    public function __construct($path, $pass, $demo = false, $security = 'TLS')
     {
         if ($demo == true) {
             $this->url = "https://cistest.apis-it.hr:8449/FiskalizacijaServiceTest";
@@ -41,8 +41,7 @@ class Fiskalizacija
     {
         $cert = @file_get_contents($path);
         if (false === $cert) {
-            throw new \Exception("Ne mogu procitati certifikat sa lokacije: " .
-                $path, 1);
+            throw new \Exception("Ne mogu procitati certifikat sa lokacije: " . $path, 1);
         }
         return $cert;
     }
@@ -93,7 +92,13 @@ class Fiskalizacija
         $SignedInfoNode = $XMLRequestDOMDoc->getElementsByTagName('SignedInfo')->item(0);
 
         $X509Issuer = $this->publicCertificateData['issuer'];
-        $X509IssuerName = sprintf('OU=%s,O=%s,C=%s', $X509Issuer['OU'], $X509Issuer['O'], $X509Issuer['C']);
+
+		if (isset($X509Issuer['OU'])) {
+			$X509IssuerName = sprintf('OU=%s,O=%s,C=%s', $X509Issuer['OU'], $X509Issuer['O'], $X509Issuer['C']);
+		} else {
+			$X509IssuerName = sprintf('O=%s,C=%s', $X509Issuer['O'], $X509Issuer['C']);
+		}
+
         $X509IssuerSerial = $this->publicCertificateData['serialNumber'];
 
         $publicCertificatePureString = str_replace('-----BEGIN CERTIFICATE-----', '', $this->certificate['cert']);
